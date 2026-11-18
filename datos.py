@@ -30,9 +30,9 @@ sprints = {
 }
 
 decisiones = [
-    ("Montaje y soldadura", "El equipo pospuso la soldadura definitiva para verificar las conexiones en protoboard y facilitar las correcciones."),
+    ("Montaje y soldadura", "Tras verficar el las conexiones en la protoboard, se decidió soldar los componentes."),
     ("Pruebas individuales", "Se registraron variaciones en las lecturas de los sensores y se comprobó el funcionamiento del buzzer por separado. La identificación de sustancias requiere validación experimental."),
-    ("Diseño de la carcasa", "El diseño avanza en paralelo al montaje. El equipo prevé realizar la impresión 3D en el Laboratorio de Inventores."),
+    ("Diseño de la carcasa", "El diseño fue completado y se realizó la impresión 3D en el Laboratorio de Inventores."),
 ]
 # COLORES DE LAS ETIQUETAS DE PROGRESO
 # La situación es el tercer valor de cada etapa.
