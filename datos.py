@@ -46,10 +46,10 @@ decisiones = [
 # Cambiar la situación aquí actualiza el texto y su color al reiniciar Flask.
 # Cada etapa: (título, descripción, situación, depende de)
 etapas = [
-    ("Verificar el montaje", "Marcos Murillo y Perla Cerpa tienen asignada la verificación de las conexiones y el montaje en protoboard. El plazo está por definir.", "Asignada", "Sin dependencias"),
-    ("Acordar las condiciones de muestreo", "En paralelo, el equipo requiere acordar con el asesor las sustancias, los recursos disponibles y el entorno de medición. Se estima una hora de reunión.", "Por agendar", "Sin dependencias"),
-    ("Recolectar las muestras", "Una vez verificado el circuito y acordadas las condiciones de medición, se prevé reunir 450 muestras etiquetadas.", "En espera", "Verificar el montaje · Acordar las condiciones de muestreo"),
-    ("Entrenar el clasificador", "El entrenamiento en Python y la exportación al ESP32 requieren un conjunto de muestras etiquetadas.", "En espera", "Recolectar las muestras"),
+    ("Verificar el montaje", "El montaje en la protoboard fue compleado con éxito.", "Completada", "Sin dependencias"),
+    ("Acordar las condiciones de muestreo", "Pendiente añadir detalles", "Completada", "Sin dependencias"),
+    ("Recolectar las muestras", "Pendiente añadir detalles", "Completada", "Verificar el montaje · Acordar las condiciones de muestreo"),
+    ("Entrenar el clasificador", "El entrenamiento en Python y la exportación al ESP32 requieren un conjunto de muestras etiquetadas.", "En proceso", "Recolectar las muestras"),
     ("Validar el sistema", "Con el clasificador integrado se evaluarán la exactitud (meta ≥ 85 %), el tiempo de respuesta (meta < 2 s) y la disponibilidad durante cuatro horas.", "En espera", "Entrenar el clasificador"),
 ]
 
