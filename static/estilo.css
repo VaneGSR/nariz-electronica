@@ -40,3 +40,26 @@ dialog#visor img{width:100%;height:auto;max-height:78vh;object-fit:contain;aspec
 dialog#visor p{margin:8px 0 0;font-weight:600}
 dialog#visor form{text-align:right;margin-bottom:8px}
 @media print{dialog,.ruta-ctl{display:none}.cuerpo{padding-left:56px}.fotos{grid-template-columns:repeat(3,1fr)}.fotos img{aspect-ratio:auto;height:150px}}
+
+
+/* Colores del progreso de las etapas; los textos se editan en datos.py. */
+.chip.chip-completada {
+    color: #175b38;
+    background: #e2f2e7;
+}
+
+.chip.chip-en-proceso {
+    color: #174a7e;
+    background: #e5effb;
+}
+
+.chip.chip-asignada,
+.chip.chip-por-agendar {
+    color: #6b4700;
+    background: #fbeed5;
+}
+
+.chip.chip-en-espera {
+    color: #435463;
+    background: #e9edf0;
+}

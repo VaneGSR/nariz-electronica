@@ -34,6 +34,16 @@ decisiones = [
     ("Pruebas individuales", "Se registraron variaciones en las lecturas de los sensores y se comprobó el funcionamiento del buzzer por separado. La identificación de sustancias requiere validación experimental."),
     ("Diseño de la carcasa", "El diseño avanza en paralelo al montaje. El equipo prevé realizar la impresión 3D en el Laboratorio de Inventores."),
 ]
+# COLORES DE LAS ETIQUETAS DE PROGRESO
+# La situación es el tercer valor de cada etapa.
+# "Completada"  -> verde.
+# "En proceso"  -> azul.
+# "Asignada"    -> naranja.
+# "Por agendar" -> naranja.
+# "En espera"   -> gris.
+# Otros textos -> gris.
+# El HTML selecciona el estilo según la situación y estilo.css define los colores.
+# Cambiar la situación aquí actualiza el texto y su color al reiniciar Flask.
 # Cada etapa: (título, descripción, situación, depende de)
 etapas = [
     ("Verificar el montaje", "Marcos Murillo y Perla Cerpa tienen asignada la verificación de las conexiones y el montaje en protoboard. El plazo está por definir.", "Asignada", "Sin dependencias"),

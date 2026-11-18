@@ -203,7 +203,17 @@ GUÍA DE EDICIÓN
                                     <summary>
                                         <span class="num">{{loop.index}}</span>
                                         <span class="tit">{{t}}</span>
-                                        <span class="chip">{{situacion}}</span>
+                                        {# Colores documentados junto al bloque etapas de datos.py. #}
+                                        {% set colores_progreso = {
+                                            'completada': 'completada',
+                                            'en proceso': 'en-proceso',
+                                            'asignada': 'asignada',
+                                            'por agendar': 'por-agendar',
+                                            'en espera': 'en-espera'
+                                        } %}
+                                        <span class="chip chip-{{ colores_progreso.get(situacion | trim | lower, 'en-espera') }}">
+                                            {{situacion}}
+                                        </span>
                                     </summary>
                                     <div class="cuerpo">
                                         <p>{{d}}</p>
