@@ -1,0 +1,327 @@
+{#
+GUÍA DE EDICIÓN
+- Textos generales, integrantes y tarjetas de evidencia: editar aquí.
+- Actividades, decisiones y etapas: editar datos.py.
+- Colores, distribución y tipografía: editar static/estilo.css.
+- Las llaves dobles muestran valores enviados por Python.
+- Los bloques for repiten elementos; los bloques if seleccionan qué mostrar.
+- Buscar TARJETA para llegar a las fotografías.
+- Después de guardar, reiniciar Flask y actualizar el navegador.
+#}
+
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>
+            Nariz electrónica · Avances de construcción
+        </title>
+        <link rel="stylesheet" href="{{url_for('static',filename='estilo.css')}}">
+    </head>
+    <body>
+
+        <!-- MENÚ SUPERIOR: los enlaces llevan a secciones de esta misma página. -->
+        <header>
+            <b>
+                Laboratorio Abierto
+                <span>
+                    / Diseño
+                </span>
+            </b>
+            <nav>
+                <a href="#avance">
+                    Avances
+                </a>
+                <a href="#construccion">
+                    Construcción
+                </a>
+                <a href="#pruebas">
+                    Pruebas
+                </a>
+                <a href="#evidencias">
+                    Evidencias
+                </a>
+            </nav>
+        </header>
+        <main>
+            <div class="hoja">
+
+                <!-- PORTADA: editar aquí el título y la descripción del proyecto. -->
+                <div class="portada">
+                    <small>
+                        INFORME DE CONSOLIDACIÓN · SPRINT III
+                    </small>
+                    <h1>
+                        Nariz electrónica de bajo costo
+                    </h1>
+                    <p>
+                        El proyecto busca detectar y clasificar compuestos volátiles en ambientes escolares y domésticos mediante sensores MQ, un ESP32 y un clasificador KNN.
+                    </p>
+                </div>
+
+                <!-- AVANCES: las actividades y sus estados se editan en sprints, en datos.py. -->
+                <section id="avance">
+                    <div class="cab">
+                        <h2>
+                            Avance de construcción
+                        </h2>
+                        <div class="selector" aria-label="Selección de sprint">
+                            {% for s in sprints %}
+                                <a {% if sprint==s %}aria-current="true"{% endif %} href="{{ url_for('tablero', sprint=s, _anchor='avance') }}">
+                                    {{ s if s == "Estado Actual" else "Sprint " ~ s }}{{" · Plan inicial" if s=="I"}}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="paneles">
+                        <div class="panel">
+                            <small>
+                                {{ sprint if sprint == "Estado Actual" else "SPRINT " ~ sprint }}
+                            </small>
+                            <h3>
+                                {{ 'Plan inicial de construcción' if sprint=='I' else 'Actividades por estado' }}
+                            </h3>
+                            <p class="sub">
+                                {{total}} actividades registradas · Seleccionar una barra para ver el detalle.
+                            </p>
+                            {% for nombre,tareas in estados.items() %}
+                                <a class="barra c{{4 if sprint=="I" else loop.index}} {{'activa' if estado==nombre}}" href="{{url_for('tablero',sprint=sprint,estado=nombre)}}#avance" {% if estado==nombre %}aria-current="true"{% endif %}>
+                                    <span>
+                                        {{nombre}}
+                                    </span>
+                                    <b>
+                                        {{tareas|length}}
+                                    </b>
+                                    <i>
+                                        <em style="width:{{100*tareas|length/escala}}%">
+                                        </em>
+                                    </i>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <div class="panel detalle">
+                            <small>
+                                DETALLE DE ACTIVIDADES · {{ sprint if sprint == "Estado Actual" else "SPRINT " ~ sprint }}
+                            </small>
+                            <h3>
+                                {{estado}}
+                            </h3>
+                            <ul>
+                                {% for t in estados[estado] %}
+                                    <li>
+                                        {{t}}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="hoja">
+                <section>
+
+                    <!-- COMPARACIÓN: los valores se calculan a partir de sprints, en datos.py. -->
+                    <h2>
+                        Comparación entre sprints
+                    </h2>
+                    <div class="panel">
+                        <div class="leyenda">
+                            <span class="c4">
+                                <i>
+                                </i>
+                                Planificadas
+                            </span>
+                            {% for n in sprints["III"] %}
+                                <span class="c{{loop.index}}">
+                                    <i>
+                                    </i>
+                                    {{n}}
+                                </span>
+                            {% endfor %}
+                        </div>
+                        {% for s,grupo in sprints.items() %}
+                            <a class="comparar" href="{{ url_for('tablero', sprint=s, _anchor='avance') }}">
+                                <strong>
+                                    {{ s if s == "Estado Actual" else "Sprint " ~ s }}
+                                </strong>
+                                <div class="pista">
+                                    {% for n,lista in grupo.items() %}
+                                        <span class="c{{4 if s=="I" else loop.index}}" style="flex-grow:{{lista|length}}" aria-label="{{n}}: {{lista|length}}">
+                                            {{lista|length}}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                                <b>
+                                    {{grupo.values()|map('length')|sum}} {{'planificadas' if s=='I' else 'en total'}}
+                                </b>
+                            </a>
+                        {% endfor %}
+                        <p class="sub">
+                            El Sprint I documenta el plan inicial. Los sprints II y III presentan el estado de ejecución al cierre de cada etapa. En el Sprint III se incorporaron las pruebas de sensores, la prueba del buzzer y el diseño de la carcasa.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- CONSTRUCCIÓN: editar los títulos y textos en decisiones, en datos.py. -->
+                <section id="construccion">
+                    <h2>
+                        Decisiones durante la construcción
+                    </h2>
+                    <div class="tres">
+                        {% for titulo,detalle in decisiones %}
+                            <div class="panel">
+                                <h3>
+                                    {{titulo}}
+                                </h3>
+                                <p>
+                                    {{detalle}}
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+            <div class="hoja">
+
+                <!-- PRUEBAS: los apartados desplegables se editan en etapas, en datos.py. -->
+                <section id="pruebas">
+                    <h2>
+                        Ruta hacia el Laboratorio de Pruebas
+                    </h2>
+                    <p>
+                        La verificación del montaje y el acuerdo con el asesor pueden avanzar en paralelo. Ambas tareas preceden a la recolección de muestras.
+                    </p>
+                    <div class="ruta-ctl">
+                        <button type="button" data-ruta="abrir" hidden>Expandir todo</button>
+                        <button type="button" data-ruta="cerrar" hidden>Contraer todo</button>
+                    </div>
+                    <ol class="ruta" id="ruta">
+                        {% for t,d,situacion,depende in etapas %}
+                            <li>
+                                <details {{ 'open' if loop.first }}>
+                                    <summary>
+                                        <span class="num">{{loop.index}}</span>
+                                        <span class="tit">{{t}}</span>
+                                        <span class="chip">{{situacion}}</span>
+                                    </summary>
+                                    <div class="cuerpo">
+                                        <p>{{d}}</p>
+                                        <p class="dep"><b>Depende de:</b> {{depende}}</p>
+                                    </div>
+                                </details>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                    <p class="sub">
+                        La interfaz móvil está disponible. La integración de las lecturas requiere que funcione la adquisición de datos.
+                    </p>
+                </section>
+            </div>
+            <div class="hoja">
+
+                <!-- EVIDENCIAS: cada tarjeta se edita por separado en esta sección. -->
+                <section id="evidencias">
+                    <h2>
+                        Evidencias del proyecto
+                    </h2>
+                    <!-- Las tarjetas se generan desde fotos, en datos.py. Para agregar una evidencia:
+                         copiar el archivo a static/evidencias/<clave>.png y añadir la clave en fotos. -->
+                    {% for grupo,items in grupos.items() %}
+                        <h3 class="grupo">{{grupo}}</h3>
+                        <div class="fotos">
+                            {% for f in items %}
+                                <figure>
+                                    {% if f.ruta %}
+                                        <a class="ampliar" href="{{ url_for('static', filename=f.ruta) }}" data-titulo="{{f.titulo}}">
+                                            <img loading="lazy" alt="{{f.titulo}}: {{f.descripcion}}" src="{{ url_for('static', filename=f.ruta) }}">
+                                        </a>
+                                    {% else %}
+                                        <div class="pendiente">Imagen pendiente</div>
+                                    {% endif %}
+                                    <figcaption>
+                                        {{f.titulo}}
+                                        <p>{{f.descripcion}}</p>
+                                    </figcaption>
+                                </figure>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <dialog id="visor" aria-label="Imagen ampliada">
+                        <form method="dialog"><button class="cerrar" aria-label="Cerrar">Cerrar</button></form>
+                        <img alt="" src="">
+                        <p></p>
+                    </dialog>
+                </section>
+
+                <!-- EQUIPO: editar aquí los nombres y cargos. -->
+                <footer>
+                    <h3>
+                        Integrantes del equipo
+                    </h3>
+                    <ul>
+                        <li>
+                            <strong>
+                                Saavedra Ramírez Vanessa Guadalupe
+                            </strong>
+                            · Líder del grupo
+                        </li>
+                        <li>
+                            Cerpa Rodríguez Perla Esmeralda
+                        </li>
+                        <li>
+                            Macías Cuevas Osvaldo
+                        </li>
+                        <li>
+                            Murillo Villegas Marcos Leonel
+                        </li>
+                    </ul>
+                    <p>
+                        <b>
+                            Asesor
+                        </b>
+                        · Gutiérrez Cobian Zeus Emanuel
+                    </p>
+                </footer>
+            </div>
+        </main>
+
+        <script>
+            /* Mejora opcional: sin JavaScript, las imágenes abren el archivo y los desplegables funcionan igual. */
+            (function () {
+                var ruta = document.getElementById("ruta");
+                var todos = ruta ? ruta.querySelectorAll("details") : [];
+                document.querySelectorAll("[data-ruta]").forEach(function (b) {
+                    b.hidden = false;
+                    b.addEventListener("click", function () {
+                        todos.forEach(function (d) { d.open = b.dataset.ruta === "abrir"; });
+                    });
+                });
+                /* Al imprimir, abrir todas las etapas y restaurar después. */
+                var previo = [];
+                window.addEventListener("beforeprint", function () {
+                    previo = Array.prototype.map.call(todos, function (d) { return d.open; });
+                    todos.forEach(function (d) { d.open = true; });
+                });
+                window.addEventListener("afterprint", function () {
+                    todos.forEach(function (d, i) { d.open = previo[i]; });
+                });
+                /* Visor de imágenes */
+                var visor = document.getElementById("visor");
+                if (visor && visor.showModal) {
+                    document.querySelectorAll("a.ampliar").forEach(function (a) {
+                        a.addEventListener("click", function (e) {
+                            e.preventDefault();
+                            visor.querySelector("img").src = a.href;
+                            visor.querySelector("img").alt = a.dataset.titulo;
+                            visor.querySelector("p").textContent = a.dataset.titulo;
+                            visor.showModal();
+                        });
+                    });
+                    visor.addEventListener("click", function (e) { if (e.target === visor) visor.close(); });
+                }
+            })();
+        </script>
+    </body>
+</html>
