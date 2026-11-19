@@ -1,368 +1,618 @@
 {#
 GUÍA DE EDICIÓN
-- Textos generales, integrantes y tarjetas de evidencia: editar aquí.
-- Actividades, decisiones y etapas: editar datos.py.
-- Colores, distribución y tipografía: editar static/estilo.css.
-- Las llaves dobles muestran valores enviados por Python.
-- Los bloques for repiten elementos; los bloques if seleccionan qué mostrar.
-- Buscar TARJETA para llegar a las fotografías.
-- Después de guardar, reiniciar Flask y actualizar el navegador.
+- Todos los textos, actividades, etapas, evidencias e integrantes se editan en datos.py.
+- Las gráficas del dataset se calculan solas desde static/datos/Dataset_Muestras.csv.
+- Colores, tipografía y distribución: static/estilo.css (variables al inicio).
+- Animaciones e interacción: static/js/panel.js · Visor 3D: static/js/carcasa3d.js
+- Cada bloque <div class="hoja"> es una diapositiva al imprimir (Imprimir > Guardar como PDF, horizontal).
+- Sin JavaScript el contenido sigue visible; el script solo añade animación e interacción.
 #}
-
 <!doctype html>
 <html lang="es">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>
-            Nariz electrónica · Avances de construcción
-        </title>
-        <link rel="stylesheet" href="{{url_for('static',filename='estilo.css')}}">
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ proyecto.titulo }} · Avances</title>
+    <meta name="description" content="{{ proyecto.resumen }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+    <script>document.documentElement.classList.add('js');</script>
+    <script type="importmap">{"imports": {"three": "{{ url_for('static', filename='vendor/three/three.module.min.js') }}", "three/addons/": "{{ url_for('static', filename='vendor/three/addons/') }}"}}</script>
+</head>
+<body>
 
-        <!-- MENÚ SUPERIOR: los enlaces llevan a secciones de esta misma página. -->
-        <header>
-            <b>
-                Laboratorio Abierto
-                <span>
-                    / Diseño
-                </span>
-            </b>
-            <nav>
-                <a href="#avance">
-                    Avances
-                </a>
-                <a href="#construccion">
-                    Construcción
-                </a>
-                <a href="#pruebas">
-                    Pruebas
-                </a>
-                <a href="#evidencias">
-                    Evidencias
-                </a>
-            </nav>
-        </header>
-        <main>
-            <div class="hoja">
+{% set colores_etapa = {'completada': 'ok', 'en proceso': 'curso', 'asignada': 'aviso', 'por agendar': 'aviso', 'en espera': 'espera'} %}
+{% macro clase_estado(nombre, s, i) %}{{ 'c4' if s == 'I' else 'c' ~ i }}{% endmacro %}
 
-                <!-- PORTADA: editar aquí el título y la descripción del proyecto. -->
-                <div class="portada">
-                    <small>
-                        INFORME DE CONSOLIDACIÓN · SPRINT III
-                    </small>
-                    <h1>
-                        Nariz electrónica de bajo costo
-                    </h1>
-                    <p>
-                        El proyecto busca detectar y clasificar compuestos volátiles en ambientes escolares y domésticos mediante sensores MQ, un ESP32 y un clasificador KNN.
-                    </p>
+<div class="progreso-lectura" aria-hidden="true"><span></span></div>
+
+<header class="barra-sup">
+    <a class="marca" href="{{ url_for('tablero') }}">
+        <span class="logo" aria-hidden="true"></span>
+        Laboratorio Abierto <span>/ Diseño</span>
+    </a>
+    <nav aria-label="Secciones">
+        <a href="#proyecto">Proyecto</a>
+        <a href="#motivo">Motivo</a>
+        <a href="#funcionamiento">Funcionamiento</a>
+        <a href="#app">App</a>
+        <a href="#dataset">Dataset</a>
+        <a href="#carcasa">Carcasa 3D</a>
+        <a href="#avance">Avance</a>
+        <a href="#pruebas">Pruebas</a>
+        <a href="#evidencias">Evidencias</a>
+    </nav>
+</header>
+
+<main>
+
+<!-- ═════════ 1 · PROYECTO ═════════ -->
+<div class="hoja" id="proyecto">
+    <section class="portada">
+        <canvas class="moleculas" aria-hidden="true"></canvas>
+        <div class="portada-txt">
+            <p class="kicker">Informe de avances · {{ etiqueta(sprint) }}</p>
+            <h1>{{ proyecto.titulo }}</h1>
+            <p class="lead">{{ proyecto.resumen }}</p>
+            <ul class="datos">
+                {% if stats %}
+                <li><b data-contar="{{ stats.total }}">{{ stats.total }}</b><span>muestras etiquetadas</span></li>
+                <li><b data-contar="{{ stats.orden|length }}">{{ stats.orden|length }}</b><span>clases de compuestos</span></li>
+                <li><b data-contar="{{ stats.sesiones }}">{{ stats.sesiones }}</b><span>sesiones de muestreo</span></li>
+                <li><b data-contar="{{ stats.exactitud }}" data-decimales="1" data-sufijo=" %">{{ stats.exactitud }} %</b><span>exactitud del KNN</span></li>
+                {% endif %}
+            </ul>
+            <ul class="logros" aria-label="Lo que ya tenemos">
+                {% for l in proyecto.logros %}<li>✓ {{ l }}</li>{% endfor %}
+            </ul>
+        </div>
+        <div class="anillo-caja">
+            {% if 'Completadas' in estados %}
+                <div class="anillo" style="--p:{{ resumen.pct }}" data-pct="{{ resumen.pct }}" role="img"
+                     aria-label="{{ resumen.pct }} % de avance: {{ resumen.hechas }} de {{ resumen.total }} actividades completadas">
+                    <b><span data-contar="{{ resumen.pct }}">{{ resumen.pct }}</span><small>%</small></b>
                 </div>
+                <p><b>{{ resumen.hechas }} de {{ resumen.total }}</b> actividades completadas<br><span>{{ etiqueta(sprint) }}</span></p>
+            {% else %}
+                <div class="anillo plan" style="--p:100" role="img" aria-label="Plan inicial: {{ resumen.total }} actividades">
+                    <b>{{ resumen.total }}</b>
+                </div>
+                <p><b>Plan inicial</b><br><span>actividades planificadas</span></p>
+            {% endif %}
+        </div>
+    </section>
 
-                <!-- PRESENTACIÓN: editar aquí la explicación, justificación y objetivo. -->
-                <section id="proyecto" aria-label="Presentación del proyecto">
-                    <div class="tres presentacion-proyecto">
-                        <article class="panel">
-                            <h2>¿En qué consiste?</h2>
-                            <p>El proyecto propone una nariz electrónica de bajo costo que integra sensores MQ-135, MQ-3 y BME680 con un ESP32. Mediante un clasificador KNN, busca interpretar las lecturas, reconocer patrones asociados a compuestos volátiles y generar alertas visuales y auditivas.</p>
-                        </article>
-                        <article class="panel">
-                            <h2>Justificación de la intervención</h2>
-                            <p>El costo y la complejidad de los equipos especializados dificultan el monitoreo químico en espacios educativos y pequeños laboratorios. La propuesta busca ofrecer una alternativa accesible que facilite la identificación de cambios en el ambiente y apoye acciones preventivas.</p>
-                        </article>
-                        <article class="panel">
-                            <h2>Objetivo del proyecto</h2>
-                            <p>Diseñar y validar un prototipo capaz de detectar y clasificar compuestos volátiles mediante sensores de bajo costo y aprendizaje automático, evaluando su desempeño en condiciones controladas.</p>
-                        </article>
-                    </div>
-                    <p class="metas-proyecto"><strong>Metas de validación propuestas:</strong> clasificación de al menos tres sustancias, precisión mínima del 85 % y tiempo de procesamiento y emisión del resultado inferior a dos segundos desde la adquisición de la señal.</p>
-                </section>
+    <section class="bloques revelar" aria-label="Presentación del proyecto">
+        {% for titulo, texto in proyecto.bloques %}
+            <article class="tarjeta">
+                <span class="num-bloque">0{{ loop.index }}</span>
+                <h2>{{ titulo }}</h2>
+                <p>{{ texto }}</p>
+            </article>
+        {% endfor %}
+    </section>
 
-                <!-- AVANCES: las actividades y sus estados se editan en sprints, en datos.py. -->
-                <section id="avance">
-                    <div class="cab">
-                        <h2>
-                            Avance de construcción
-                        </h2>
-                        <div class="selector" aria-label="Selección de sprint">
-                            {% for s in sprints %}
-                                <a {% if sprint==s %}aria-current="true"{% endif %} href="{{ url_for('tablero', sprint=s, _anchor='avance') }}">
-                                    {{ s if s == "Estado Actual" else "Sprint " ~ s }}{{" · Plan inicial" if s=="I"}}
-                                </a>
-                            {% endfor %}
-                        </div>
+    <section class="metas revelar" aria-labelledby="t-metas">
+        <h2 id="t-metas" class="etq">Metas de validación</h2>
+        <ul>
+            {% for valor, texto in proyecto.metas %}
+                <li><b>{{ valor }}</b><span>{{ texto }}</span></li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+
+<!-- ═════════ 2 · MOTIVO ═════════ -->
+<div class="hoja" id="motivo">
+    <section class="motivo">
+        <div class="historia revelar">
+            <p class="kicker">Por qué existe este proyecto</p>
+            <h2>Monitoreo químico accesible en entornos educativos y domésticos</h2>
+            {% for p in motivo.historia %}<p>{{ p }}</p>{% endfor %}
+            <blockquote>{{ motivo.frase }}</blockquote>
+        </div>
+        <div class="olfato revelar">
+            <h3 class="etq">Por qué el olfato no es una alarma</h3>
+            <ol class="escala">
+                {% for dato, texto in motivo.olfato %}
+                    <li style="--i:{{ loop.index0 }}"><b>{{ dato }}</b><span>{{ texto }}</span></li>
+                {% endfor %}
+            </ol>
+            <p class="fuentes">Fuentes:
+                {% for nombre, url in motivo.fuentes %}<a href="{{ url }}" target="_blank" rel="noopener">{{ nombre }}</a>{{ ' · ' if not loop.last }}{% endfor %}
+            </p>
+        </div>
+    </section>
+
+    <section class="revelar" aria-labelledby="t-necesidad">
+        <h3 id="t-necesidad" class="etq">Qué necesidad resuelve</h3>
+        <div class="necesidad">
+            {% for titulo, texto in motivo.necesidad %}
+                <article class="tarjeta"><span class="icono-n">{{ loop.index }}</span><h3>{{ titulo }}</h3><p>{{ texto }}</p></article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="comparacion revelar" aria-labelledby="t-industrial">
+        <div class="tarjeta">
+            <h3 id="t-industrial">El prototipo frente a los detectores industriales</h3>
+            <p class="humano">{{ motivo.pensar_humano }}</p>
+            <div class="tabla-scroll">
+                <table class="tabla-comp">
+                    <thead><tr><th></th><th>Detector industrial</th><th>Prototipo de nariz electrónica</th></tr></thead>
+                    <tbody>
+                        {% for aspecto, ind, nuestra in motivo.comparacion %}
+                            <tr><th>{{ aspecto }}</th><td>{{ ind }}</td><td>{{ nuestra }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="sub">{{ motivo.aclaracion }}</p>
+        </div>
+    </section>
+</div>
+
+<!-- ═════════ 3 · DIAGRAMA DE FUNCIONAMIENTO ═════════ -->
+<div class="hoja" id="funcionamiento">
+    <section>
+        <div class="cab">
+            <div>
+                <p class="kicker">Arquitectura y funcionamiento</p>
+                <h2>Cómo funciona</h2>
+                <p class="sub">Selecciona un bloque para consultar su función o reproduce una muestra guardada del dataset. La simulación no realiza mediciones en vivo.</p>
+            </div>
+            <div class="diag-ctl">
+                <button type="button" class="btn btn-fuerte" data-simular hidden>▶ Simular lectura</button>
+                <button type="button" class="btn" data-simular-amoniaco hidden>Simular amoníaco</button>
+            </div>
+        </div>
+
+        <div class="diag-grid">
+            <div class="tarjeta diag-lienzo">
+                {% set N = {
+                    'bme680': (30,40,150,58), 'mq3': (30,140,150,58), 'mq135': (30,240,150,58),
+                    'acond': (230,140,160,58), 'adc': (430,140,130,58), 'fuente': (600,30,150,50),
+                    'esp32': (600,140,150,58), 'calib': (790,30,150,50), 'proc': (790,140,150,58),
+                    'entren': (980,30,190,50), 'knn': (980,140,190,58), 'monitoreo': (790,305,150,50),
+                    'alertas': (980,430,190,56), 'ble': (700,525,160,50), 'buzzer': (880,525,140,50),
+                    'led': (1040,525,140,50), 'registro': (520,525,150,50)} %}
+                {% set L = {'bme680':'BME680','mq3':'MQ-3','mq135':'MQ-135','acond':'Acondicionamiento','adc':'ADC del ESP32',
+                    'fuente':'Fuente','esp32':'ESP32','calib':'Calibración','proc':'Procesamiento','entren':'Entrenamiento (dataset)',
+                    'knn':'Algoritmo KNN','monitoreo':'Monitoreo continuo','alertas':'Módulo de alertas','ble':'Bluetooth → App',
+                    'buzzer':'Buzzer','led':'LED','registro':'Registro'} %}
+                {% set E = [
+                    ('bme680','esp32','M180 69 L545 69 Q580 69 580 104 L580 124 Q580 140 610 140',''), ('mq3','acond','M180 169 L230 169',''),
+                    ('mq135','acond','M180 269 C205 269 205 169 230 169',''), ('acond','adc','M390 169 L430 169',''),
+                    ('adc','esp32','M560 169 L600 169',''), ('fuente','esp32','M675 80 L675 140','sec'),
+                    ('esp32','proc','M750 169 L790 169',''), ('calib','proc','M865 80 L865 140','sec'),
+                    ('proc','knn','M940 169 L980 169',''), ('entren','knn','M1075 80 L1075 140','sec'),
+                    ('knn','decision','M1075 198 L1075 285',''), ('decision','monitoreo','M980 330 L940 330','no'),
+                    ('monitoreo','proc','M865 305 L865 198','no'), ('decision','alertas','M1075 375 L1075 430','si'),
+                    ('alertas','ble','M1075 486 C1075 505 780 505 780 525','si'),
+                    ('alertas','buzzer','M1075 486 C1075 505 950 505 950 525','si'),
+                    ('alertas','led','M1075 486 C1075 505 1110 505 1110 525','si'),
+                    ('ble','registro','M700 550 L670 550','si')] %}
+                <svg class="diagrama-svg" viewBox="0 0 1200 600" role="img" aria-labelledby="diag-titulo">
+                    <title id="diag-titulo">Diagrama: sensores, acondicionamiento, ADC, ESP32, procesamiento, KNN, decisión, monitoreo continuo y alertas.</title>
+                    <defs>
+                        <marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                            <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+                        </marker>
+                        <filter id="brillo" x="-30%" y="-30%" width="160%" height="160%">
+                            <feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                    </defs>
+                    <g class="aristas">
+                        {% for a, b, d, t in E %}
+                            <path class="arista {{ t }}" d="{{ d }}" data-de="{{ a }}" data-a="{{ b }}" marker-end="url(#flecha)"/>
+                        {% endfor %}
+                    </g>
+                    <text x="290" y="56" class="lbl-digital">Comunicación digital · I²C</text>
+                    <text class="lbl-si" x="1088" y="412">Sí</text>
+                    <text class="lbl-no" x="950" y="318">No</text>
+                    <g class="particulas"></g>
+                    <g class="nodos">
+                        {% for clave, (x, y, w, h) in N.items() %}
+                            {% set info = diagrama[clave] %}
+                            <g class="nodo et-{{ info[2] }}" data-nodo="{{ clave }}" tabindex="0" role="button" aria-label="{{ info[0] }}">
+                                <rect x="{{ x }}" y="{{ y }}" width="{{ w }}" height="{{ h }}" rx="12"/>
+                                <text x="{{ x + w / 2 }}" y="{{ y + h / 2 + 5 }}">{{ L[clave] }}</text>
+                                <text class="valor" x="{{ x + w / 2 }}" y="{{ y + h + 16 }}"></text>
+                            </g>
+                        {% endfor %}
+                        {% set info = diagrama['decision'] %}
+                        <g class="nodo et-decision" data-nodo="decision" tabindex="0" role="button" aria-label="{{ info[0] }}">
+                            <polygon points="1075,285 1170,330 1075,375 980,330"/>
+                            <text x="1075" y="335">¿Detectado?</text>
+                        </g>
+                    </g>
+                    <g class="leyenda-diag" transform="translate(30 345)">
+                        <text class="etq-svg" x="0" y="0">ETAPAS</text>
+                        {% for et, nombre in [('sensado','Sensado'),('proceso','Procesamiento'),('ia','Inteligencia artificial'),('decision','Decisión'),('alerta','Alertas'),('salida','Salidas')] %}
+                            <g class="ley-item et-{{ et }}" data-etapa="{{ et }}" transform="translate({{ 0 if loop.index0 < 3 else 200 }} {{ 22 + (loop.index0 % 3) * 26 }})">
+                                <rect width="16" height="16" rx="4"/><text x="24" y="13">{{ nombre }}</text>
+                            </g>
+                        {% endfor %}
+                    </g>
+                </svg>
+            </div>
+
+            <aside class="diag-lado">
+                <div class="tarjeta diag-info" aria-live="polite">
+                    <p class="kicker" data-info-etapa>Bloque</p>
+                    <h3 data-info-titulo>Selecciona un bloque</h3>
+                    <p data-info-texto>Cada bloque del diagrama explica su función dentro de la nariz electrónica.</p>
+                </div>
+                <div class="tarjeta consola" hidden>
+                    <p class="kicker">Simulación con una muestra real</p>
+                    <ol data-consola></ol>
+                    <div class="resultado" data-resultado></div>
+                </div>
+            </aside>
+        </div>
+
+
+    </section>
+</div>
+
+<!-- ═════════ 4 · APLICACIÓN DE TELÉFONO ═════════ -->
+<div class="hoja" id="app">
+    <section class="app-grid">
+        <div class="telefono-caja revelar">
+            <div class="telefono">
+                <div class="pantalla">
+                    <img src="{{ url_for('static', filename='evidencias/aplicacion.png') }}" alt="Pantalla de inicio de la app Nariz Electrónica: estado Óptimo, pestañas Inicio, Detalle y ¿Qué es esto?, y navegación Panel, Historial y Conexión.">
+                    <span class="zona" data-zona="estado" style="left:58%;top:2.5%;width:21%;height:5.5%"></span>
+                    <span class="zona" data-zona="refresh" style="left:79.5%;top:2.5%;width:7.5%;height:5.5%"></span>
+                    <span class="zona" data-zona="play" style="left:88.5%;top:2.5%;width:8%;height:5.5%"></span>
+                    <span class="zona" data-zona="tabs" style="left:1.5%;top:12%;width:97%;height:6.5%"></span>
+                    <span class="zona" data-zona="nav" style="left:0;top:88.5%;width:100%;height:11.5%"></span>
+                </div>
+            </div>
+            <div class="ondas" aria-hidden="true"><i></i><i></i><i></i></div>
+        </div>
+        <div class="app-txt">
+            <p class="kicker">Aplicación de teléfono</p>
+            <h2>La nariz en tu bolsillo</h2>
+            <p class="lead-oscuro">{{ app_movil.resumen }}</p>
+            <h3 class="etq">Tecnologías</h3>
+            <ul class="tecnologias revelar">
+                {% for nombre, texto in app_movil.tecnologias %}
+                    <li><b>{{ nombre }}</b><span>{{ texto }}</span></li>
+                {% endfor %}
+            </ul>
+            <h3 class="etq">Cómo funciona</h3>
+            <ol class="pasos-app" data-pasos-app>
+                {% for titulo, texto, zona in app_movil.pasos %}
+                    <li data-zona="{{ zona }}" tabindex="0"><b>{{ titulo }}</b><span>{{ texto }}</span></li>
+                {% endfor %}
+            </ol>
+        </div>
+    </section>
+</div>
+
+<!-- ═════════ 5 · DATASET Y CLASIFICADOR ═════════ -->
+<div class="hoja" id="dataset">
+    <section>
+        <div class="cab">
+            <div>
+                <p class="kicker">Dataset y clasificador KNN</p>
+                <h2>Lo que aprendió la nariz</h2>
+                {% if stats %}<p class="sub">{{ stats.total }} muestras · {{ stats.sesiones }} sesiones · del {{ stats.desde }} al {{ stats.hasta }}</p>{% endif %}
+            </div>
+            <a class="btn" href="{{ url_for('static', filename='datos/' ~ dataset.archivo) }}" download>⬇ Descargar CSV</a>
+        </div>
+
+        {% if stats %}
+        <ul class="kpis revelar">
+            <li><b data-contar="{{ stats.total }}">{{ stats.total }}</b><span>muestras</span></li>
+            <li><b data-contar="{{ stats.orden|length }}">{{ stats.orden|length }}</b><span>clases × {{ (stats.total / stats.orden|length)|int }}</span></li>
+            <li><b><span data-contar="{{ stats.entrenamiento }}">{{ stats.entrenamiento }}</span> / <span data-contar="{{ stats.prueba }}">{{ stats.prueba }}</span></b><span>entrenamiento / prueba</span></li>
+            <li class="destacado"><b data-contar="{{ stats.exactitud }}" data-decimales="1" data-sufijo=" %">{{ stats.exactitud }} %</b><span>exactitud en prueba ({{ stats.aciertos }}/{{ stats.prueba }}) · meta ≥ 85 %</span></li>
+            <li><b data-contar="{{ stats.t90 }}" data-decimales="1" data-sufijo=" s">{{ stats.t90 }} s</b><span>t90 promedio del sensor</span></li>
+        </ul>
+
+        <div class="ds-grid">
+            <div class="tarjeta ds-dispersion">
+                <div class="cab cab-mini">
+                    <h3>Huella de cada compuesto</h3>
+                    <div class="seg" role="group" aria-label="Partición" data-particion>
+                        <button type="button" aria-pressed="true" data-p="todas">Todas</button>
+                        <button type="button" aria-pressed="false" data-p="entrenamiento">Entrenamiento</button>
+                        <button type="button" aria-pressed="false" data-p="prueba">Prueba</button>
                     </div>
-                    <div class="paneles">
-                        <div class="panel">
-                            <small>
-                                {{ sprint if sprint == "Estado Actual" else "SPRINT " ~ sprint }}
-                            </small>
-                            <h3>
-                                {{ 'Plan inicial de construcción' if sprint=='I' else 'Actividades por estado' }}
-                            </h3>
-                            <p class="sub">
-                                {{total}} actividades registradas · Seleccionar una barra para ver el detalle.
-                            </p>
-                            {% for nombre,tareas in estados.items() %}
-                                <a class="barra c{{4 if sprint=="I" else loop.index}} {{'activa' if estado==nombre}}" href="{{url_for('tablero',sprint=sprint,estado=nombre)}}#avance" {% if estado==nombre %}aria-current="true"{% endif %}>
-                                    <span>
-                                        {{nombre}}
-                                    </span>
-                                    <b>
-                                        {{tareas|length}}
-                                    </b>
-                                    <i>
-                                        <em style="width:{{100*tareas|length/escala}}%">
-                                        </em>
-                                    </i>
-                                </a>
-                            {% endfor %}
-                        </div>
-                        <div class="panel detalle">
-                            <small>
-                                DETALLE DE ACTIVIDADES · {{ sprint if sprint == "Estado Actual" else "SPRINT " ~ sprint }}
-                            </small>
-                            <h3>
-                                {{estado}}
-                            </h3>
-                            <ul>
-                                {% for t in estados[estado] %}
-                                    <li>
-                                        {{t}}
-                                    </li>
+                </div>
+                <p class="sub">Cada punto es una muestra: respuesta del MQ-135 (horizontal) contra la del MQ-3 (vertical). Pulsa una clase para ocultarla; los anillos rojos son errores del KNN.</p>
+                <div class="chips-clases" data-chips></div>
+                <div class="dispersion" data-dispersion>
+                    <noscript><p class="sub">Activa JavaScript para ver la gráfica de dispersión.</p></noscript>
+                </div>
+            </div>
+
+            <div class="tarjeta ds-matriz">
+                <h3>Matriz de confusión <small>(muestras de prueba)</small></h3>
+                <div class="tabla-scroll">
+                <table class="matriz">
+                    <thead><tr><th class="esq">real ↓ · predicho →</th>{% for d in stats.orden %}<th><span style="--c:{{ clases[d][1] }}">{{ clases[d][0] }}</span></th>{% endfor %}</tr></thead>
+                    <tbody>
+                        {% for c in stats.orden %}
+                            {% set fila = stats.matriz[c] %}
+                            {% set n = fila.values()|sum %}
+                            <tr><th><span style="--c:{{ clases[c][1] }}">{{ clases[c][0] }}</span></th>
+                                {% for d in stats.orden %}
+                                    {% set v = fila[d] %}
+                                    <td class="{{ 'diag' if c == d else ('err' if v else '') }}" style="--a:{{ (v / n if n else 0)|round(2) }}" title="{{ clases[c][0] }} → {{ clases[d][0] }}: {{ v }}">{{ v }}</td>
                                 {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-            </div>
-            <div class="hoja">
-                <section>
-
-                    <!-- COMPARACIÓN: los valores se calculan a partir de sprints, en datos.py. -->
-                    <h2>
-                        Comparación entre sprints
-                    </h2>
-                    <div class="panel">
-                        <div class="leyenda">
-                            <span class="c4">
-                                <i>
-                                </i>
-                                Planificadas
-                            </span>
-                            {% for n in sprints["III"] %}
-                                <span class="c{{loop.index}}">
-                                    <i>
-                                    </i>
-                                    {{n}}
-                                </span>
-                            {% endfor %}
-                        </div>
-                        {% for s,grupo in sprints.items() %}
-                            <a class="comparar" href="{{ url_for('tablero', sprint=s, _anchor='avance') }}">
-                                <strong>
-                                    {{ s if s == "Estado Actual" else "Sprint " ~ s }}
-                                </strong>
-                                <div class="pista">
-                                    {% for n,lista in grupo.items() %}
-                                        <span class="c{{4 if s=="I" else loop.index}}" style="flex-grow:{{lista|length}}" aria-label="{{n}}: {{lista|length}}">
-                                            {{lista|length}}
-                                        </span>
-                                    {% endfor %}
-                                </div>
-                                <b>
-                                    {{grupo.values()|map('length')|sum}} {{'planificadas' if s=='I' else 'en total'}}
-                                </b>
-                            </a>
+                            </tr>
                         {% endfor %}
-                        <p class="sub">
-                            El Sprint I documenta el plan inicial. Los sprints II y III presentan el estado de ejecución al cierre de cada etapa. En el Sprint III se incorporaron las pruebas de sensores, la prueba del buzzer y el diseño de la carcasa.
-                        </p>
-                    </div>
-                </section>
+                    </tbody>
+                </table>
+                </div>
+                <h3 class="mt">Aciertos por clase</h3>
+                <ul class="recall">
+                    {% for c in stats.por_clase %}
+                        <li><span>{{ c.nombre }}</span><i><em style="width:{{ c.recall }}%;--c:{{ c.color }}"></em></i><b>{{ c.recall }} %</b></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
 
-                <!-- CONSTRUCCIÓN: editar los títulos y textos en decisiones, en datos.py. -->
-                <section id="construccion">
-                    <h2>
-                        Decisiones durante la construcción
-                    </h2>
-                    <div class="tres">
-                        {% for titulo,detalle in decisiones %}
-                            <div class="panel">
-                                <h3>
-                                    {{titulo}}
-                                </h3>
-                                <p>
-                                    {{detalle}}
-                                </p>
+
+
+        <div class="ds-grid ds-grid-2">
+            <div class="tarjeta">
+                <h3>Respuesta promedio por clase</h3>
+                <p class="sub">Estable ÷ base: 1 = el aire no cambió; cuanto más corta la barra, más reaccionó el sensor.</p>
+                <div class="medias">
+                    {% for c in stats.por_clase %}
+                        <div class="media-fila">
+                            <span class="nom"><i style="background:{{ c.color }}"></i>{{ c.nombre }}</span>
+                            <div class="pares">
+                                <span class="par m135"><em style="width:{{ (c.mq135 / 1.1 * 100)|round(1) }}%"></em><b>{{ c.mq135 }}</b></span>
+                                <span class="par m3"><em style="width:{{ (c.mq3 / 1.1 * 100)|round(1) }}%"></em><b>{{ c.mq3 }}</b></span>
                             </div>
-                        {% endfor %}
-                    </div>
-                </section>
-            </div>
-            <div class="hoja">
-
-                <!-- DIAGRAMA: imagen original de la página 5 de Modulares 26A. -->
-                <section id="funcionamiento" aria-labelledby="titulo-funcionamiento">
-                    <h2 id="titulo-funcionamiento">Arquitectura y funcionamiento</h2>
-                    <p>El esquema presenta la integración prevista entre la adquisición de datos, el procesamiento, la clasificación y la generación de alertas.</p>
-                    <figure class="diagrama-proyecto">
-                        <a class="ampliar" href="{{ url_for('static', filename='diagrama_funcionamiento.png') }}" data-titulo="Arquitectura y funcionamiento propuestos" aria-label="Ampliar diagrama de funcionamiento">
-                            <img src="{{ url_for('static', filename='diagrama_funcionamiento.png') }}" alt="Diagrama de la propuesta: sensores BME680, MQ-3 y MQ-135, adquisición y procesamiento con ESP32, calibración y entrenamiento KNN, clasificación, monitoreo continuo y alertas mediante Wi-Fi, buzzer y LED, con registro de eventos." loading="lazy">
-                        </a>
-                        <figcaption>Seleccionar el diagrama para ampliarlo.</figcaption>
-                    </figure>
-                </section>
-
-                <!-- PRUEBAS: los apartados desplegables se editan en etapas, en datos.py. -->
-                <section id="pruebas">
-                    <h2>
-                        Ruta hacia el Laboratorio de Pruebas
-                    </h2>
-                    <p>
-                        La verificación del montaje y el acuerdo con el asesor pueden avanzar en paralelo. Ambas tareas preceden a la recolección de muestras.
-                    </p>
-                    <div class="ruta-ctl">
-                        <button type="button" data-ruta="abrir" hidden>Expandir todo</button>
-                        <button type="button" data-ruta="cerrar" hidden>Contraer todo</button>
-                    </div>
-                    <ol class="ruta" id="ruta">
-                        {% for t,d,situacion,depende in etapas %}
-                            <li>
-                                <details {{ 'open' if loop.first }}>
-                                    <summary>
-                                        <span class="num">{{loop.index}}</span>
-                                        <span class="tit">{{t}}</span>
-                                        {# Colores documentados junto al bloque etapas de datos.py. #}
-                                        {% set colores_progreso = {
-                                            'completada': 'completada',
-                                            'en proceso': 'en-proceso',
-                                            'asignada': 'asignada',
-                                            'por agendar': 'por-agendar',
-                                            'en espera': 'en-espera'
-                                        } %}
-                                        <span class="chip chip-{{ colores_progreso.get(situacion | trim | lower, 'en-espera') }}">
-                                            {{situacion}}
-                                        </span>
-                                    </summary>
-                                    <div class="cuerpo">
-                                        <p>{{d}}</p>
-                                        <p class="dep"><b>Depende de:</b> {{depende}}</p>
-                                    </div>
-                                </details>
-                            </li>
-                        {% endfor %}
-                    </ol>
-                    <p class="sub">
-                        La interfaz móvil está disponible. La integración de las lecturas requiere que funcione la adquisición de datos.
-                    </p>
-                </section>
-            </div>
-            <div class="hoja">
-
-                <!-- EVIDENCIAS: cada tarjeta se edita por separado en esta sección. -->
-                <section id="evidencias">
-                    <h2>
-                        Evidencias del proyecto
-                    </h2>
-                    <!-- Las tarjetas se generan desde fotos, en datos.py. Para agregar una evidencia:
-                         copiar el archivo a static/evidencias/<clave>.png y añadir la clave en fotos. -->
-                    {% for grupo,items in grupos.items() %}
-                        <h3 class="grupo">{{grupo}}</h3>
-                        <div class="fotos">
-                            {% for f in items %}
-                                <figure>
-                                    {% if f.ruta %}
-                                        <a class="ampliar" href="{{ url_for('static', filename=f.ruta) }}" data-titulo="{{f.titulo}}">
-                                            <img loading="lazy" alt="{{f.titulo}}: {{f.descripcion}}" src="{{ url_for('static', filename=f.ruta) }}">
-                                        </a>
-                                    {% else %}
-                                        <div class="pendiente">Imagen pendiente</div>
-                                    {% endif %}
-                                    <figcaption>
-                                        {{f.titulo}}
-                                        <p>{{f.descripcion}}</p>
-                                    </figcaption>
-                                </figure>
-                            {% endfor %}
                         </div>
                     {% endfor %}
-
-                    <dialog id="visor" aria-label="Imagen ampliada">
-                        <form method="dialog"><button class="cerrar" aria-label="Cerrar">Cerrar</button></form>
-                        <img alt="" src="">
-                        <p></p>
-                    </dialog>
-                </section>
-
-                <!-- EQUIPO: editar aquí los nombres y cargos. -->
-                <footer>
-                    <h3>
-                        Integrantes del equipo
-                    </h3>
-                    <ul>
-                        <li>
-                            <strong>
-                                Saavedra Ramírez Vanessa Guadalupe
-                            </strong>
-                            · Líder del grupo
-                        </li>
-                        <li>
-                            Cerpa Rodríguez Perla Esmeralda
-                        </li>
-                        <li>
-                            Macías Cuevas Osvaldo
-                        </li>
-                        <li>
-                            Murillo Villegas Marcos Leonel
-                        </li>
-                    </ul>
-                    <p>
-                        <b>
-                            Asesor
-                        </b>
-                        · Gutiérrez Cobian Zeus Emanuel
-                    </p>
-                </footer>
+                    <p class="ley-medias"><span class="m135"><i></i>MQ-135</span><span class="m3"><i></i>MQ-3</span></p>
+                </div>
             </div>
-        </main>
+            <div class="tarjeta">
+                <h3>Protocolo de muestreo</h3>
+                <ul class="protocolo">
+                    {% for t, d in dataset.protocolo %}<li><b>{{ t }}</b><span>{{ d }}</span></li>{% endfor %}
+                </ul>
+                <details class="columnas">
+                    <summary>Columnas del archivo {{ dataset.archivo }}</summary>
+                    <dl>{% for c, d in dataset.columnas %}<dt>{{ c }}</dt><dd>{{ d }}</dd>{% endfor %}</dl>
+                </details>
+            </div>
+        </div>
+        {% else %}
+            <p class="pendiente">Copia {{ dataset.archivo }} en static/datos para ver las gráficas.</p>
+        {% endif %}
+    </section>
+</div>
 
-        <script>
-            /* Mejora opcional: sin JavaScript, las imágenes abren el archivo y los desplegables funcionan igual. */
-            (function () {
-                var ruta = document.getElementById("ruta");
-                var todos = ruta ? ruta.querySelectorAll("details") : [];
-                document.querySelectorAll("[data-ruta]").forEach(function (b) {
-                    b.hidden = false;
-                    b.addEventListener("click", function () {
-                        todos.forEach(function (d) { d.open = b.dataset.ruta === "abrir"; });
-                    });
-                });
-                /* Al imprimir, abrir todas las etapas y restaurar después. */
-                var previo = [];
-                window.addEventListener("beforeprint", function () {
-                    previo = Array.prototype.map.call(todos, function (d) { return d.open; });
-                    todos.forEach(function (d) { d.open = true; });
-                });
-                window.addEventListener("afterprint", function () {
-                    todos.forEach(function (d, i) { d.open = previo[i]; });
-                });
-                /* Visor de imágenes */
-                var visor = document.getElementById("visor");
-                if (visor && visor.showModal) {
-                    document.querySelectorAll("a.ampliar").forEach(function (a) {
-                        a.addEventListener("click", function (e) {
-                            e.preventDefault();
-                            visor.querySelector("img").src = a.href;
-                            visor.querySelector("img").alt = a.dataset.titulo;
-                            visor.querySelector("p").textContent = a.dataset.titulo;
-                            visor.showModal();
-                        });
-                    });
-                    visor.addEventListener("click", function (e) { if (e.target === visor) visor.close(); });
-                }
-            })();
-        </script>
-    </body>
+<!-- ═════════ 6 · CARCASA 3D ═════════ -->
+<div class="hoja" id="carcasa">
+    <section class="carcasa-grid">
+        <div class="visor3d-caja">
+            <div class="visor3d" data-visor3d
+                 data-base="{{ url_for('static', filename='modelos/carcasa_base.stl') }}"
+                 data-tapa="{{ url_for('static', filename='modelos/carcasa_tapa.stl') }}">
+                <img class="visor3d-respaldo" src="{{ url_for('static', filename='modelos/carcasa_vista.png') }}" alt="Vista isométrica de la carcasa: base con aberturas laterales y tapa con ranuras de ventilación.">
+                <div class="visor3d-carga" hidden>Cargando modelo…</div>
+            </div>
+            <div class="visor3d-ctl" data-visor3d-ctl hidden>
+                <div class="seg" role="group" aria-label="Vista">
+                    <button type="button" data-vista="ensamblada" aria-pressed="false">Ensamblada</button>
+                    <button type="button" data-vista="explosionada" aria-pressed="true">Separada</button>
+                    <button type="button" data-vista="base" aria-pressed="false">Base</button>
+                    <button type="button" data-vista="tapa" aria-pressed="false">Tapa</button>
+                </div>
+                <div class="seg" role="group" aria-label="Opciones">
+                    <button type="button" data-op="girar" aria-pressed="true">⟳ Girar</button>
+                    <button type="button" data-op="rayos" aria-pressed="false">Rayos X</button>
+                    <button type="button" data-op="medidas" aria-pressed="false">Medidas</button>
+                    <button type="button" data-op="reiniciar">Reiniciar</button>
+                </div>
+                <div class="colores" role="group" aria-label="Color del filamento">
+                    {% for nombre, color in [('Rosa','#e8b4bc'),('Gris','#9aa3ab'),('Turquesa','#3fb0a0'),('Blanco','#f4f1ec'),('Negro','#3a3d42')] %}
+                        <button type="button" data-color="{{ color }}" style="--c:{{ color }}" aria-label="{{ nombre }}" title="{{ nombre }}" {% if loop.first %}aria-pressed="true"{% endif %}></button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="carcasa-txt">
+            <p class="kicker">Prototipo físico</p>
+            <h2>Carcasa en 3D</h2>
+            <p class="lead-oscuro">{{ carcasa.descripcion }}</p>
+            <ul class="piezas">
+                {% for nombre, medidas, texto in carcasa.piezas %}
+                    <li class="tarjeta"><b>{{ nombre }}</b><span class="medida">{{ medidas }}</span><p>{{ texto }}</p></li>
+                {% endfor %}
+            </ul>
+            <div class="descargas">
+                {% for nombre, ruta in carcasa.descargas %}
+                    <a class="btn" href="{{ url_for('static', filename=ruta) }}" download>⬇ {{ nombre }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ═════════ 7 · AVANCE POR SPRINT Y DECISIONES ═════════ -->
+<div class="hoja" id="avance">
+    <section>
+        <div class="cab">
+            <div>
+                <p class="kicker">Avance de construcción</p>
+                <h2>Actividades por sprint</h2>
+            </div>
+            <nav class="selector" aria-label="Seleccionar sprint">
+                {% for s in sprints %}
+                    <a href="{{ url_for('tablero', sprint=s, _anchor='avance') }}" {% if sprint == s %}aria-current="page"{% endif %}>
+                        {{ etiqueta(s) }}{% if s == 'I' %} <small>plan</small>{% endif %}
+                    </a>
+                {% endfor %}
+            </nav>
+        </div>
+
+        <div class="avance">
+            <div class="tarjeta">
+                <h3>{{ 'Plan inicial de construcción' if sprint == 'I' else 'Actividades por estado' }}</h3>
+                <p class="sub">{{ resumen.total }} actividades · elige un estado para ver el detalle</p>
+                <div class="pila" aria-hidden="true">
+                    {% for nombre, tareas in estados.items() %}
+                        <span class="{{ clase_estado(nombre, sprint, loop.index) }}" style="flex-grow:{{ tareas|length }}"></span>
+                    {% endfor %}
+                </div>
+                {% for nombre, tareas in estados.items() %}
+                    <a class="barra {{ clase_estado(nombre, sprint, loop.index) }}{{ ' activa' if estado == nombre }}"
+                       href="{{ url_for('tablero', sprint=sprint, estado=nombre, _anchor='avance') }}"
+                       {% if estado == nombre %}aria-current="true"{% endif %}>
+                        <span class="punto"></span>
+                        <span class="nombre">{{ nombre }}</span>
+                        <b>{{ tareas|length }}</b>
+                        <i><em style="width:{{ 100 * tareas|length / escala }}%"></em></i>
+                    </a>
+                {% endfor %}
+            </div>
+
+            <div class="tarjeta detalle">
+                <p class="kicker">{{ etiqueta(sprint) }} · detalle</p>
+                <h3>{{ estado }} <span class="cuenta">{{ estados[estado]|length }}</span></h3>
+                <ol>
+                    {% for t in estados[estado] %}<li>{{ t }}</li>{% endfor %}
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <section aria-labelledby="t-comparacion">
+        <div class="tarjeta">
+            <div class="cab cab-comp">
+                <h3 id="t-comparacion">Comparación entre sprints</h3>
+                <div class="leyenda">
+                    <span class="c4"><i></i>Planificadas</span>
+                    {% for n in sprints['III'] %}<span class="c{{ loop.index }}"><i></i>{{ n }}</span>{% endfor %}
+                </div>
+            </div>
+            {% for s, grupo in sprints.items() %}
+                <a class="comparar{{ ' activa' if s == sprint }}" href="{{ url_for('tablero', sprint=s, _anchor='avance') }}">
+                    <strong>{{ etiqueta(s) }}</strong>
+                    <span class="pista">
+                        {% for n, lista in grupo.items() %}
+                            <span class="{{ clase_estado(n, s, loop.index) }}" style="flex-grow:{{ lista|length }}" title="{{ n }}: {{ lista|length }}">{{ lista|length }}</span>
+                        {% endfor %}
+                    </span>
+                    <b>{{ grupo.values()|map('length')|sum }} {{ 'planificadas' if s == 'I' else 'en total' }}</b>
+                </a>
+            {% endfor %}
+            <p class="sub">El Sprint I documenta el plan inicial; los siguientes muestran el estado al cierre de cada etapa. En el Sprint III se incorporaron las pruebas de sensores, la prueba del buzzer y el diseño de la carcasa.</p>
+        </div>
+    </section>
+
+    <section aria-labelledby="t-decisiones">
+        <h3 id="t-decisiones" class="etq">Decisiones durante la construcción</h3>
+        <div class="decisiones">
+            {% for titulo, detalle in decisiones %}
+                <article class="tarjeta">
+                    <h3>{{ titulo }}</h3>
+                    <p>{{ detalle }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<!-- ═════════ 8 · RUTA DE PRUEBAS ═════════ -->
+<div class="hoja" id="pruebas">
+    <section>
+        <div class="cab">
+            <div>
+                <p class="kicker">Ruta hacia el Laboratorio de Pruebas</p>
+                <h2>Etapas de validación</h2>
+            </div>
+            <div class="ruta-ctl">
+                <button type="button" data-ruta="abrir" hidden>Expandir todo</button>
+                <button type="button" data-ruta="cerrar" hidden>Contraer todo</button>
+            </div>
+        </div>
+        <p class="sub">La verificación del montaje y el acuerdo de las condiciones de muestreo avanzaron en paralelo; ambas precedieron a la recolección de muestras.</p>
+        <ol class="ruta" id="ruta">
+            {% for t, d, situacion, depende in etapas %}
+                {% set tono = colores_etapa.get(situacion|trim|lower, 'espera') %}
+                <li class="t-{{ tono }} revelar">
+                    <details {{ 'open' if tono == 'curso' }}>
+                        <summary>
+                            <span class="num">{% if tono == 'ok' %}✓{% else %}{{ loop.index }}{% endif %}</span>
+                            <span class="tit">{{ t }}</span>
+                            <span class="chip">{{ situacion }}</span>
+                        </summary>
+                        <div class="cuerpo">
+                            <p>{{ d }}</p>
+                            <p class="dep"><b>Depende de:</b> {{ depende }}</p>
+                        </div>
+                    </details>
+                </li>
+            {% endfor %}
+        </ol>
+    </section>
+</div>
+
+<!-- ═════════ 9 · EVIDENCIAS Y EQUIPO ═════════ -->
+<div class="hoja" id="evidencias">
+    <section>
+        <p class="kicker">Evidencias</p>
+        <h2>Registro del proyecto</h2>
+        <div class="fotos">
+        {% for grupo, items in grupos.items() %}
+            {% for f in items %}
+                <figure class="tarjeta revelar">
+                    {% if f.ruta %}
+                        <a class="ampliar" href="{{ url_for('static', filename=f.ruta) }}" data-titulo="{{ f.titulo }}">
+                            <img loading="lazy" src="{{ url_for('static', filename=f.ruta) }}" alt="{{ f.titulo }}: {{ f.descripcion }}">
+                        </a>
+                    {% else %}
+                        <div class="pendiente">Imagen pendiente</div>
+                    {% endif %}
+                    <figcaption><span class="grupo">{{ grupo }}</span><b>{{ f.titulo }}</b><span>{{ f.descripcion }}</span></figcaption>
+                </figure>
+            {% endfor %}
+        {% endfor %}
+        </div>
+    </section>
+
+    <footer class="equipo" id="equipo">
+        <div>
+            <h3 class="etq">Integrantes del equipo</h3>
+            <ul>
+                {% for nombre, rol in equipo.integrantes %}
+                    <li><span class="inicial" aria-hidden="true">{{ nombre[0] }}</span>{{ nombre }}{% if rol %} <em>{{ rol }}</em>{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div>
+            <h3 class="etq">Asesor</h3>
+            <ul><li><span class="inicial" aria-hidden="true">{{ equipo.asesor[0] }}</span>{{ equipo.asesor }}</li></ul>
+        </div>
+    </footer>
+</div>
+
+</main>
+
+<dialog id="visor" aria-label="Imagen ampliada">
+    <form method="dialog"><button class="btn" aria-label="Cerrar">Cerrar</button></form>
+    <img alt="" src="">
+    <p></p>
+</dialog>
+
+{% if stats %}
+<script type="application/json" id="json-dataset">{{ {'puntos': stats.puntos, 'orden': stats.orden} | tojson }}</script>
+{% endif %}
+<script type="application/json" id="json-clases">{{ clases | tojson }}</script>
+<script type="application/json" id="json-diagrama">{{ diagrama | tojson }}</script>
+<script src="{{ url_for('static', filename='js/panel.js') }}" defer></script>
+<script type="module" src="{{ url_for('static', filename='js/carcasa3d.js') }}"></script>
+</body>
 </html>
