@@ -23,8 +23,8 @@ sprints = {
         "Pendientes": ["Recolección de muestras", "Entrenamiento y exportación del modelo KNN", "Validación del clasificador", "Prueba de respuesta y diferenciación", "Prueba de operación continua y documentación"],
     },
     "Estado Actual": {
-        "Completadas": ["Adquisición de componentes", "Prueba individual del buzzer","Montaje en protoboard", "Diseño de la carcasa", "Recolección de muestras", ],
-        "En proceso": ["Pruebas individuales de sensores MQ", "Desarrollo del firmware", "Entrenamiento y exportación del modelo KNN",],
+        "Completadas": ["Adquisición de componentes", "Prueba individual del buzzer","Montaje en protoboard", "Diseño de la carcasa", "Recolección de muestras", "Pruebas individuales de sensores MQ"],
+        "En proceso": ["Desarrollo del firmware", "Entrenamiento y exportación del modelo KNN",],
         "Pendientes": ["Validación del clasificador", "Prueba de respuesta y diferenciación", "Prueba de operación continua y documentación"],
     },
 }
