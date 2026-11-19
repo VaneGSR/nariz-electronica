@@ -40,7 +40,7 @@ proyecto = {
         ("4 h", "de operación continua"),
     ],
     # Lo que ya existe del proyecto (se muestra en la portada)
-    "logros": ["Prototipo físico", "Dataset", "Clasificador KNN", "Carcasa 3D", "App Android", "Aplicación web"],
+    "logros": ["Prototipo físico", "Dataset", "Clasificador KNN · versión inicial", "Carcasa 3D", "App Android", "Aplicación web"],
 }
 
 # ── MOTIVO ──────────────────────────────────────────────────────────────────
@@ -49,10 +49,10 @@ motivo = {
         "En escuelas y pequeños laboratorios de la Zona Metropolitana de Guadalajara se utilizan solventes, reactivos y productos de limpieza que pueden liberar compuestos volátiles. El costo y la complejidad de los equipos especializados pueden dificultar el acceso a herramientas de monitoreo en estos espacios.",
         "El proyecto propone desarrollar una nariz electrónica de bajo costo que permita estudiar y clasificar patrones de respuesta ante distintas sustancias, con información comprensible y alertas para el usuario.",
     ],
-    "frase": "Una herramienta accesible para estudiar el monitoreo de compuestos volátiles en entornos educativos y domésticos.",
+    "frase": "El alcance actual se centra en la clasificación de patrones bajo condiciones controladas.",
     # Por qué el olfato no basta: (dato, explicación)
     "olfato": [
-        ("≈ 5 ppm", "Concentración a la que una persona empieza a oler el amoníaco."),
+        ("≈ 5 ppm", "Umbral olfativo aproximado reportado para el amoníaco."),
         ("Fatiga olfativa", "Con la exposición prolongada la nariz se adapta y deja de percibir el olor, "
                             "aunque el gas siga ahí."),
         ("300 ppm", "Nivel que NIOSH considera inmediatamente peligroso para la vida o la salud (IDLH)."),
@@ -87,18 +87,18 @@ motivo = {
 # Textos que aparecen al pulsar cada bloque del diagrama interactivo: clave -> (título, descripción, etapa)
 diagrama = {
     "bme680": ("BME680", "Registra temperatura y humedad y comunica los datos digitalmente al ESP32 mediante I²C, sin pasar por su ADC. Estas variables no forman parte de las entradas del clasificador actual.", "sensado"),
-    "mq3": ("MQ-3", "Sensor sensible a alcoholes y etanol. Su resistencia baja cuando hay vapores.", "sensado"),
+    "mq3": ("MQ-3", "Sensor sensible a alcoholes, como el etanol.", "sensado"),
     "mq135": ("MQ-135", "Sensor de calidad del aire sensible a amoníaco y alcoholes.", "sensado"),
     "acond": ("Acondicionamiento de señal", "Divisores y resistencias que adaptan la señal analógica para el ESP32.", "proceso"),
-    "adc": ("ADC del ESP32", "Convierte el voltaje de cada sensor en un número de 12 bits (0 a 4095).", "proceso"),
+    "adc": ("ADC del ESP32", "Convierte las señales analógicas acondicionadas de los sensores MQ-135 y MQ-3 en valores digitales de 12 bits, entre 0 y 4095.", "proceso"),
     "fuente": ("Fuente de alimentación", "Energiza el ESP32, el calentador de los sensores MQ y las alertas.", "proceso"),
     "esp32": ("ESP32 · microcontrolador", "Lee los sensores, ejecuta el clasificador y controla las alertas y el Bluetooth.", "proceso"),
     "calib": ("Sistema de calibración", "Registra la línea base en aire limpio para calcular la respuesta relativa.", "proceso"),
-    "proc": ("Procesamiento y normalización", "Calcula la respuesta = valor estable ÷ valor base de cada sensor.", "proceso"),
+    "proc": ("Procesamiento y normalización", "Calcula la respuesta relativa Rs/R0 de cada sensor MQ: resistencia estable dividida entre resistencia base en aire limpio. Las dos razones se estandarizan antes de la clasificación.", "proceso"),
     "entren": ("Entrenamiento", "Dataset de compuestos y curvas de respuesta: 360 muestras etiquetadas para entrenar.", "ia"),
-    "knn": ("Algoritmo KNN (K-Nearest Neighbors)", "Compara la lectura con las muestras más parecidas y vota la clase.", "ia"),
+    "knn": ("Algoritmo KNN (K-Nearest Neighbors)", "Compara cada lectura con las muestras de referencia y asigna la clase mayoritaria entre sus cinco vecinos más cercanos.", "ia"),
     "decision": ("¿Compuesto detectado?", "Si la clase es distinta de «aire limpio» se activan las alertas.", "decision"),
-    "monitoreo": ("Monitoreo continuo", "Si el aire está limpio, el sistema sigue midiendo en ciclo.", "decision"),
+    "monitoreo": ("Monitoreo continuo", "Si la lectura se clasifica como aire limpio, el sistema continúa el monitoreo.", "decision"),
     "alertas": ("Módulo de alertas", "Coordina las salidas cuando se detecta un compuesto.", "alerta"),
     "ble": ("Interfaz inalámbrica", "Propuesta inicial: Wi-Fi. Implementado: Bluetooth Low Energy hacia la app Android.", "salida"),
     "buzzer": ("Buzzer auditivo", "Alarma sonora para quien está en el lugar.", "salida"),
@@ -120,7 +120,7 @@ app_movil = {
     "pasos": [
         ("Conectar", "En «Conexión» el teléfono se vincula con la nariz electrónica por Bluetooth.", "nav"),
         ("Medir en vivo", "Con ▶ la app empieza a recibir las lecturas en tiempo real.", "play"),
-        ("Ver el estado", "El indicador superior resume el aire: «Óptimo» o la alerta del compuesto detectado.", "estado"),
+        ("Ver el estado", "El indicador superior muestra el resultado de la clasificación: «Óptimo» o la alerta del compuesto detectado.", "estado"),
         ("Revisar el detalle", "Las pestañas Inicio, Detalle y ¿Qué es esto? explican la lectura y el proyecto.", "tabs"),
         ("Consultar el historial", "Con ↻ se carga el historial de lecturas guardadas.", "refresh"),
     ],
@@ -139,9 +139,9 @@ dataset = {
     "columnas": [
         ("muestra_id · sesion · timestamp", "Identificador, sesión (1 a 10) y hora de cada muestra."),
         ("etiqueta · nombre", "Clase real y la sustancia usada."),
-        ("mq135_base · mq3_base", "Valor del sensor en aire limpio antes de exponerlo."),
-        ("mq135_estable · mq3_estable", "Valor estabilizado durante la exposición."),
-        ("mq135_respuesta · mq3_respuesta", "Estable ÷ base. 1 = sin cambio; cuanto menor, más fuerte la respuesta."),
+        ("mq135_base · mq3_base", "Resistencia del sensor en aire limpio antes de la exposición (R0), en kΩ."),
+        ("mq135_estable · mq3_estable", "Resistencia estabilizada durante la exposición (Rs), en kΩ."),
+        ("mq135_respuesta · mq3_respuesta", "Razón Rs/R0, sin unidades. Un valor cercano a 1 indica poca variación respecto a la lectura de referencia en aire limpio."),
         ("mq135_adc_max · mq3_adc_max", "Lectura máxima del ADC de 12 bits del ESP32."),
         ("t90_s", "Segundos hasta alcanzar el 90 % de la respuesta (vacío en aire limpio)."),
         ("particion · prediccion · confianza", "Entrenamiento o prueba, clase que predijo el KNN y proporción de vecinos que la votaron."),
@@ -206,9 +206,9 @@ sprints = {
     "Estado actual": {
         "Completadas": ["Adquisición de componentes", "Prueba individual del buzzer", "Montaje en protoboard",
                         "Diseño de la carcasa", "Recolección de muestras", "Pruebas individuales de sensores MQ",
-                        "Desarrollo del firmware", "Entrenamiento y exportación del modelo KNN",
+                        "Desarrollo del firmware",
                         "Validación del clasificador", "Aplicación Android y aplicación web"],
-        "En proceso": ["Prueba de respuesta y diferenciación"],
+        "En proceso": ["Entrenamiento y exportación del modelo KNN", "Prueba de respuesta y diferenciación"],
         "Pendientes": ["Prueba de operación continua y documentación"],
     },
 }
@@ -246,14 +246,17 @@ etapas = [
      "limpio. Cada registro contiene las lecturas de ambos sensores y su etiqueta de referencia.",
      "Completada", "Verificar el montaje · Acordar las condiciones de muestreo"),
     ("Entrenar el clasificador",
-     "Con el conjunto de muestras etiquetadas, el clasificador KNN se entrenó en Python con 360 muestras y se "
-     "exportó al ESP32. En las 90 muestras de prueba acertó 82 (91.1 %).",
-     "Completada", "Recolectar las muestras"),
+     "Se realizó un entrenamiento inicial del clasificador KNN en Python con 360 muestras y su exportación al ESP32. "
+     "El modelo continúa en evaluación y aún no se ha definido si esta versión será la definitiva. "
+     "La versión evaluada acertó 82 de las 90 muestras de prueba (91.1 %).",
+     "En proceso", "Recolectar las muestras"),
     ("Validar el sistema",
-     "Con el clasificador integrado se evalúan la exactitud (meta ≥ 85 %), el tiempo de respuesta (meta < 2 s) "
-     "y la operación continua durante cuatro horas. La exactitud ya se cumple (91.1 %); faltan el tiempo de "
-     "respuesta del sistema completo y la prueba de cuatro horas. También conviene separar mejor amoníaco y "
-     "vinagre, que se confunden en 4 de 18 muestras de prueba.",
+     "La versión evaluada del clasificador alcanzó una exactitud del 91.1 % en las 90 muestras de prueba, "
+     "superando la meta del 85 %. Permanecen pendientes la medición del tiempo de respuesta del sistema integrado "
+     "(meta < 2 s) y la prueba de operación continua durante cuatro horas. "
+     "Cuatro de las 18 muestras de amoníaco se clasificaron como vinagre; en sentido inverso, "
+     "una de las 18 muestras de vinagre se clasificó como amoníaco. "
+     "Las pruebas iniciales corresponden al modelo disponible y deberán revisarse si se modifica el entrenamiento.",
      "En proceso", "Entrenar el clasificador"),
 ]
 

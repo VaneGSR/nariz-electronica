@@ -50,15 +50,15 @@ GUÍA DE EDICIÓN
     <section class="portada">
         <canvas class="moleculas" aria-hidden="true"></canvas>
         <div class="portada-txt">
-            <p class="kicker">Informe de avances · {{ etiqueta(sprint) }}</p>
+            <p class="kicker">Informe de avances · Estado actual</p>
             <h1>{{ proyecto.titulo }}</h1>
             <p class="lead">{{ proyecto.resumen }}</p>
             <ul class="datos">
                 {% if stats %}
                 <li><b data-contar="{{ stats.total }}">{{ stats.total }}</b><span>muestras etiquetadas</span></li>
-                <li><b data-contar="{{ stats.orden|length }}">{{ stats.orden|length }}</b><span>clases de compuestos</span></li>
+                <li><b data-contar="{{ stats.orden|length }}">{{ stats.orden|length }}</b><span>clases de clasificación</span></li>
                 <li><b data-contar="{{ stats.sesiones }}">{{ stats.sesiones }}</b><span>sesiones de muestreo</span></li>
-                <li><b data-contar="{{ stats.exactitud }}" data-decimales="1" data-sufijo=" %">{{ stats.exactitud }} %</b><span>exactitud del KNN</span></li>
+                <li><b data-contar="{{ stats.exactitud }}" data-decimales="1" data-sufijo=" %">{{ stats.exactitud }} %</b><span>exactitud en el conjunto de prueba</span></li>
                 {% endif %}
             </ul>
             <ul class="logros" aria-label="Lo que ya tenemos">
@@ -66,18 +66,12 @@ GUÍA DE EDICIÓN
             </ul>
         </div>
         <div class="anillo-caja">
-            {% if 'Completadas' in estados %}
-                <div class="anillo" style="--p:{{ resumen.pct }}" data-pct="{{ resumen.pct }}" role="img"
-                     aria-label="{{ resumen.pct }} % de avance: {{ resumen.hechas }} de {{ resumen.total }} actividades completadas">
-                    <b><span data-contar="{{ resumen.pct }}">{{ resumen.pct }}</span><small>%</small></b>
+                <div class="anillo" style="--p:{{ actual.pct }}" data-pct="{{ actual.pct }}" role="img"
+                     aria-label="{{ actual.pct }} % de avance: {{ actual.hechas }} de {{ actual.total }} actividades completadas">
+                    <b><span data-contar="{{ actual.pct }}">{{ actual.pct }}</span><small>%</small></b>
                 </div>
-                <p><b>{{ resumen.hechas }} de {{ resumen.total }}</b> actividades completadas<br><span>{{ etiqueta(sprint) }}</span></p>
-            {% else %}
-                <div class="anillo plan" style="--p:100" role="img" aria-label="Plan inicial: {{ resumen.total }} actividades">
-                    <b>{{ resumen.total }}</b>
-                </div>
-                <p><b>Plan inicial</b><br><span>actividades planificadas</span></p>
-            {% endif %}
+                <p><b>{{ actual.hechas }} de {{ actual.total }}</b> actividades completadas<br><span>Estado actual</span></p>
+
         </div>
     </section>
 
@@ -111,7 +105,7 @@ GUÍA DE EDICIÓN
             <blockquote>{{ motivo.frase }}</blockquote>
         </div>
         <div class="olfato revelar">
-            <h3 class="etq">Por qué el olfato no es una alarma</h3>
+            <h3 class="etq">Por qué el olfato no sustituye al monitoreo instrumental</h3>
             <ol class="escala">
                 {% for dato, texto in motivo.olfato %}
                     <li style="--i:{{ loop.index0 }}"><b>{{ dato }}</b><span>{{ texto }}</span></li>
@@ -271,8 +265,8 @@ GUÍA DE EDICIÓN
             <div class="ondas" aria-hidden="true"><i></i><i></i><i></i></div>
         </div>
         <div class="app-txt">
-            <p class="kicker">Aplicación de teléfono</p>
-            <h2>La nariz en tu bolsillo</h2>
+            <p class="kicker">Aplicación móvil</p>
+            <h2>Monitoreo mediante la aplicación móvil</h2>
             <p class="lead-oscuro">{{ app_movil.resumen }}</p>
             <h3 class="etq">Tecnologías</h3>
             <ul class="tecnologias revelar">
@@ -296,7 +290,7 @@ GUÍA DE EDICIÓN
         <div class="cab">
             <div>
                 <p class="kicker">Dataset y clasificador KNN</p>
-                <h2>Lo que aprendió la nariz</h2>
+                <h2>Conjunto de datos y desempeño del clasificador</h2>
                 {% if stats %}<p class="sub">{{ stats.total }} muestras · {{ stats.sesiones }} sesiones · del {{ stats.desde }} al {{ stats.hasta }}</p>{% endif %}
             </div>
             <a class="btn" href="{{ url_for('static', filename='datos/' ~ dataset.archivo) }}" download>⬇ Descargar CSV</a>
@@ -308,13 +302,16 @@ GUÍA DE EDICIÓN
             <li><b data-contar="{{ stats.orden|length }}">{{ stats.orden|length }}</b><span>clases × {{ (stats.total / stats.orden|length)|int }}</span></li>
             <li><b><span data-contar="{{ stats.entrenamiento }}">{{ stats.entrenamiento }}</span> / <span data-contar="{{ stats.prueba }}">{{ stats.prueba }}</span></b><span>entrenamiento / prueba</span></li>
             <li class="destacado"><b data-contar="{{ stats.exactitud }}" data-decimales="1" data-sufijo=" %">{{ stats.exactitud }} %</b><span>exactitud en prueba ({{ stats.aciertos }}/{{ stats.prueba }}) · meta ≥ 85 %</span></li>
-            <li><b data-contar="{{ stats.t90 }}" data-decimales="1" data-sufijo=" s">{{ stats.t90 }} s</b><span>t90 promedio del sensor</span></li>
+            <li><b data-contar="{{ stats.t90|round(2) }}" data-decimales="2" data-sufijo=" s">{{ "%.2f"|format(stats.t90) }} s</b><span>tiempo medio de respuesta del sensor (t90)</span></li>
         </ul>
+
+        <p class="sub">El t90 indica el tiempo necesario para alcanzar el 90 % de la respuesta del sensor ante la exposición. Es distinto del tiempo que requiere el sistema para procesar una lectura y producir una clasificación.</p>
+        <p class="sub">Los resultados corresponden a la versión evaluada del clasificador. El entrenamiento continúa en revisión y aún no se ha definido como definitivo.</p>
 
         <div class="ds-grid">
             <div class="tarjeta ds-dispersion">
                 <div class="cab cab-mini">
-                    <h3>Huella de cada compuesto</h3>
+                    <h3>Patrones de respuesta por clase</h3>
                     <div class="seg" role="group" aria-label="Partición" data-particion>
                         <button type="button" aria-pressed="true" data-p="todas">Todas</button>
                         <button type="button" aria-pressed="false" data-p="entrenamiento">Entrenamiento</button>
@@ -361,7 +358,7 @@ GUÍA DE EDICIÓN
         <div class="ds-grid ds-grid-2">
             <div class="tarjeta">
                 <h3>Respuesta promedio por clase</h3>
-                <p class="sub">Estable ÷ base: 1 = el aire no cambió; cuanto más corta la barra, más reaccionó el sensor.</p>
+                <p class="sub">Respuesta relativa = resistencia estable ÷ resistencia base (Rs/R0). Un valor cercano a 1 indica poca variación respecto a la lectura de referencia en aire limpio.</p>
                 <div class="medias">
                     {% for c in stats.por_clase %}
                         <div class="media-fila">
