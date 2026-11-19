@@ -47,8 +47,8 @@ decisiones = [
 # Cada etapa: (título, descripción, situación, depende de)
 etapas = [
     ("Verificar el montaje", "El montaje en la protoboard fue compleado con éxito.", "Completada", "Sin dependencias"),
-    ("Acordar las condiciones de muestreo", "Pendiente añadir detalles", "Completada", "Sin dependencias"),
-    ("Recolectar las muestras", "Pendiente añadir detalles", "Completada", "Verificar el montaje · Acordar las condiciones de muestreo"),
+    ("Acordar las condiciones de muestreo", "Se recibió el apoyo de un alumno de ingeniería química quien preparó las sustancias y realizó las mediciones con el prototipo de sensores MQ-135 y MQ-3 conectado al ESP32. Se utilizó una cámara cerrada, con ciclos de 30 segundos de exposición y 45 segundos de purga con aire limpio, siguiendo el mismo protocolo durante las diez sesiones.", "Completada", "Sin dependencias"),
+    ("Recolectar las muestras", "Se recibió el archivo Dataset_Muestras.csv con 450 muestras obtenidas en diez sesiones, entre el 5 y el 15 de octubre de 2026. El conjunto incluye cinco clases con 90 muestras cada una: amoníaco, acetona, etanol, vinagre y aire limpio. Cada registro contiene las lecturas de ambos sensores y su etiqueta de referencia.", "Completada", "Verificar el montaje · Acordar las condiciones de muestreo"),
     ("Entrenar el clasificador", "El entrenamiento en Python y la exportación al ESP32 requieren un conjunto de muestras etiquetadas.", "En proceso", "Recolectar las muestras"),
     ("Validar el sistema", "Con el clasificador integrado se evaluarán la exactitud (meta ≥ 85 %), el tiempo de respuesta (meta < 2 s) y la disponibilidad durante cuatro horas.", "En espera", "Entrenar el clasificador"),
 ]
