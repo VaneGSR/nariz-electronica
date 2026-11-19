@@ -63,3 +63,17 @@ dialog#visor form{text-align:right;margin-bottom:8px}
     color: #435463;
     background: #e9edf0;
 }
+
+/* Presentación del proyecto y diagrama de funcionamiento. */
+.presentacion-proyecto h2 {font-size:23px; margin:8px 0;}
+.presentacion-proyecto p {margin-top:16px;}
+.metas-proyecto {padding:18px 22px; border-left:4px solid var(--teal); background:#e7f1f1; border-radius:0 8px 8px 0; font-size:18px;}
+.diagrama-proyecto {padding:22px; text-align:center;}
+.diagrama-proyecto a {display:block; width:100%; max-width:850px; margin:auto;}
+.diagrama-proyecto img {display:block; width:100%; height:auto;}
+.diagrama-proyecto figcaption {font-size:16px; color:var(--muted); font-weight:400;}
+@media print {
+    .diagrama-proyecto {break-inside:avoid; padding:8px;}
+    .diagrama-proyecto img {max-height:155mm; width:auto; max-width:100%; margin:auto;}
+    .diagrama-proyecto figcaption {display:none;}
+}

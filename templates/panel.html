@@ -60,6 +60,25 @@ GUÍA DE EDICIÓN
                     </p>
                 </div>
 
+                <!-- PRESENTACIÓN: editar aquí la explicación, justificación y objetivo. -->
+                <section id="proyecto" aria-label="Presentación del proyecto">
+                    <div class="tres presentacion-proyecto">
+                        <article class="panel">
+                            <h2>¿En qué consiste?</h2>
+                            <p>El proyecto propone una nariz electrónica de bajo costo que integra sensores MQ-135, MQ-3 y BME680 con un ESP32. Mediante un clasificador KNN, busca interpretar las lecturas, reconocer patrones asociados a compuestos volátiles y generar alertas visuales y auditivas.</p>
+                        </article>
+                        <article class="panel">
+                            <h2>Justificación de la intervención</h2>
+                            <p>El costo y la complejidad de los equipos especializados dificultan el monitoreo químico en espacios educativos y pequeños laboratorios. La propuesta busca ofrecer una alternativa accesible que facilite la identificación de cambios en el ambiente y apoye acciones preventivas.</p>
+                        </article>
+                        <article class="panel">
+                            <h2>Objetivo del proyecto</h2>
+                            <p>Diseñar y validar un prototipo capaz de detectar y clasificar compuestos volátiles mediante sensores de bajo costo y aprendizaje automático, evaluando su desempeño en condiciones controladas.</p>
+                        </article>
+                    </div>
+                    <p class="metas-proyecto"><strong>Metas de validación propuestas:</strong> clasificación de al menos tres sustancias, precisión mínima del 85 % y tiempo de procesamiento y emisión del resultado inferior a dos segundos desde la adquisición de la señal.</p>
+                </section>
+
                 <!-- AVANCES: las actividades y sus estados se editan en sprints, en datos.py. -->
                 <section id="avance">
                     <div class="cab">
@@ -183,6 +202,18 @@ GUÍA DE EDICIÓN
                 </section>
             </div>
             <div class="hoja">
+
+                <!-- DIAGRAMA: imagen original de la página 5 de Modulares 26A. -->
+                <section id="funcionamiento" aria-labelledby="titulo-funcionamiento">
+                    <h2 id="titulo-funcionamiento">Arquitectura y funcionamiento propuestos</h2>
+                    <p>El esquema presenta la integración prevista entre la adquisición de datos, el procesamiento, la clasificación y la generación de alertas.</p>
+                    <figure class="diagrama-proyecto">
+                        <a class="ampliar" href="{{ url_for('static', filename='diagrama_funcionamiento.png') }}" data-titulo="Arquitectura y funcionamiento propuestos" aria-label="Ampliar diagrama de funcionamiento">
+                            <img src="{{ url_for('static', filename='diagrama_funcionamiento.png') }}" alt="Diagrama de la propuesta: sensores BME680, MQ-3 y MQ-135, adquisición y procesamiento con ESP32, calibración y entrenamiento KNN, clasificación, monitoreo continuo y alertas mediante Wi-Fi, buzzer y LED, con registro de eventos." loading="lazy">
+                        </a>
+                        <figcaption>Seleccionar el diagrama para ampliarlo.</figcaption>
+                    </figure>
+                </section>
 
                 <!-- PRUEBAS: los apartados desplegables se editan en etapas, en datos.py. -->
                 <section id="pruebas">
